@@ -10,7 +10,7 @@ export class UsersService {
 	constructor(
 		@InjectRepository(User)
 		private readonly usersRepo: Repository<User>,
-	) {}
+	) { }
 
 	async create(createUserDto: CreateUserDto) {
 		const user = this.usersRepo.create(createUserDto);
@@ -46,4 +46,12 @@ export class UsersService {
 		await this.usersRepo.remove(user);
 		return { deleted: true };
 	}
+	
+	async findByEmail(email: string) {
+		return this.usersRepo.findOne({
+			where: { email },
+			select: ['id', 'name', 'email', 'password'],
+		});
+	}
+
 }
