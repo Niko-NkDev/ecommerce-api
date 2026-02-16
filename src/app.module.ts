@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,9 +11,11 @@ import { User } from './users/users.entity';
 import { Product } from './products/products.entity';
 import { Cart } from './carts/cart.entity';
 import { CartItem } from './cart-items/cart-item.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
@@ -29,6 +32,7 @@ import { CartItem } from './cart-items/cart-item.entity';
     ProductsModule,
     CartsModule,
     CartItemsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

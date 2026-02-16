@@ -7,41 +7,80 @@ import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Injectable()
 export class CartItemsService {
-	constructor(
-		@InjectRepository(CartItem)
-		private readonly itemsRepo: Repository<CartItem>,
-	) {}
+  constructor(
+    @InjectRepository(CartItem)
+    private readonly itemsRepo: Repository<CartItem>,
+  ) { }
 
-	create(dto: CreateCartItemDto) {
-		const item = this.itemsRepo.create({
-			cart: { id: dto.cartId } as any,
-			product: { id: dto.productId } as any,
-			quantity: dto.quantity,
-		});
-		return this.itemsRepo.save(item);
-	}
+  // Método para agregar un producto al carrito, o actualizar la cantidad si ya existe
+  async create(dto: CreateCartItemDto) {
+    const { cartId, productId, quantity } = dto;
 
-	findAll() {
-		return this.itemsRepo.find({ relations: ['cart', 'product'] });
-	}
+    const existingItem = await this.itemsRepo.findOne({
+      where: {
+        cart: { id: cartId },
+        product: { id: productId },
+      },
+      relations: ['cart', 'product'],
+    });
 
-	async findOne(id: number) {
-		const item = await this.itemsRepo.findOne({ where: { id }, relations: ['cart', 'product'] });
-		if (!item) throw new NotFoundException('Item de carrito no encontrado');
-		return item;
-	}
+    if (existingItem) {
+      existingItem.quantity += quantity;
+      return this.itemsRepo.save(existingItem);
+    }
 
-	async update(id: number, dto: UpdateCartItemDto) {
-		const item = await this.findOne(id);
-		if (dto.cartId) item.cart = { id: dto.cartId } as any;
-		if (dto.productId) item.product = { id: dto.productId } as any;
-		if (dto.quantity) item.quantity = dto.quantity;
-		return this.itemsRepo.save(item);
-	}
+    const newItem = this.itemsRepo.create({
+      cart: { id: cartId } as any,
+      product: { id: productId } as any,
+      quantity,
+    });
 
-	async remove(id: number) {
-		const item = await this.findOne(id);
-		await this.itemsRepo.remove(item);
-		return { deleted: true };
-	}
+    return this.itemsRepo.save(newItem);
+  }
+
+  findAll() {
+    return this.itemsRepo.find({ relations: ['cart', 'product'] });
+  }
+
+  async findOne(id: number) {
+    const item = await this.itemsRepo.findOne({ where: { id }, relations: ['cart', 'product'] });
+    if (!item) throw new NotFoundException('Item de carrito no encontrado');
+    return item;
+  }
+
+ async update(id: number, dto: UpdateCartItemDto) {
+  const item = await this.itemsRepo.findOne({ where: { id } });
+
+  if (!item) {
+    throw new NotFoundException('Item no encontrado');
+  }
+
+  //  Si quantity es 0 → eliminar
+  if (dto.quantity === 0) {
+    await this.itemsRepo.remove(item);
+    return { deleted: true };
+  }
+
+  // Si es mayor a 0 → actualizar normalmente
+  if (dto.quantity !== undefined) {
+    item.quantity = dto.quantity;
+  }
+  return this.itemsRepo.save(item);
+}
+
+  async remove(id: number) {
+    const item = await this.findOne(id);
+    await this.itemsRepo.remove(item);
+    return { deleted: true };
+  }
+
+  async clearCart(cartId: number) {
+    const cart = await this.findOne(cartId);
+
+    await this.itemsRepo.delete({
+      cart: { id: cartId },
+    });
+
+    return { message: 'Carrito limpiado' };
+  }
 }

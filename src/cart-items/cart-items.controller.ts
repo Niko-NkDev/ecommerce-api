@@ -5,7 +5,7 @@ import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Controller('cart-items')
 export class CartItemsController {
-  constructor(private readonly cartItemsService: CartItemsService) {}
+  constructor(private readonly cartItemsService: CartItemsService) { }
 
   @Post()
   create(@Body() dto: CreateCartItemDto) {
@@ -34,4 +34,11 @@ export class CartItemsController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.cartItemsService.remove(id);
   }
+
+  // Nuevo endpoint para limpiar un carrito completo
+  @Delete(':id/clear')
+  clear(@Param('id', ParseIntPipe) id: number) {
+    return this.cartItemsService.clearCart(id);
+  }
+
 }
