@@ -21,12 +21,16 @@ export class CartsService {
   }
 
   async findMine(userId: number) {
-    const cart = await this.cartsRepo.findOne({
+    let cart = await this.cartsRepo.findOne({
       where: { user: { id: userId } },
       relations: ['user', 'items', 'items.product'],
     });
-    if (!cart) throw new NotFoundException('Carrito no encontrado');
-    const total = cart.items?.reduce((sum, item) => sum + item.quantity * item.product.price, 0) ?? 0;
+    if (!cart) {
+      // Crear carrito automáticamente si no existe
+      cart = await this.cartsRepo.save(this.cartsRepo.create({ user: { id: userId } as any }));
+      cart.items = [];
+    }
+    const total = cart.items?.reduce((sum, item) => sum + item.quantity * (item.product?.price ?? 0), 0) ?? 0;
     return { ...cart, total };
   }
 
