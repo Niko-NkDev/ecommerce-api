@@ -16,13 +16,11 @@ export class ProductsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   findAll() {
     return this.productsService.findAll();
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.findOne(id);
   }

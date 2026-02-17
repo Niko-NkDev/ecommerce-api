@@ -12,6 +12,14 @@ async function bootstrap() {
     }),
   );
 
+  // Habilitar CORS para permitir que el frontend (Vite) consuma el backend
+  app.enableCors({
+    origin: true, // Permitir cualquier origen en desarrollo
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   await app.listen(3000);
 }
 bootstrap();
